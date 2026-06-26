@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skyglass — Weather Forecast</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Google Fonts: Space Grotesk (display) + Inter (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500&display=swap"
+    rel="stylesheet"
+  />
+</head>
+<body>
+
+  <!-- ─────────────────────────────────────────
+       AMBIENT BACKGROUND ORBS (CSS animated)
+  ───────────────────────────────────────── -->
+  <div class="bg-orb bg-orb--1" aria-hidden="true"></div>
+  <div class="bg-orb bg-orb--2" aria-hidden="true"></div>
+  <div class="bg-orb bg-orb--3" aria-hidden="true"></div>
+
+  <!-- ─────────────────────────────────────────
+       TOP NAV
+  ───────────────────────────────────────── -->
+  <nav class="nav" role="navigation" aria-label="Site navigation">
+    <span class="nav__logo">
+      <!-- Minimal SVG cloud-sun mark -->
+      <svg class="nav__logo-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="16" cy="12" r="5" stroke="currentColor" stroke-width="2"/>
+        <path d="M16 4V2M16 22v-2M24 12h2M6 12H4M21.66 6.34l1.41-1.41M8.93 19.07l-1.41 1.41M21.66 17.66l1.41 1.41M8.93 6.93 7.52 5.52"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M9 22a4 4 0 0 1 0-8h.5A5.5 5.5 0 0 1 20 16.5V17a3 3 0 0 1 0 6H9Z"
+          fill="currentColor" opacity=".25" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+      Skyglass
+    </span>
+
+    <!-- Theme toggle -->
+    <button
+      class="theme-toggle"
+      id="themeToggle"
+      aria-label="Toggle light/dark mode"
+      aria-pressed="false"
+    >
+      <!-- Sun icon (visible in dark mode) -->
+      <svg class="icon icon--sun" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/>
+        <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <!-- Moon icon (visible in light mode) -->
+      <svg class="icon icon--moon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </nav>
+
+  <!-- ─────────────────────────────────────────
+       MAIN CONTENT
+  ───────────────────────────────────────── -->
+  <main class="main" role="main">
+
+    <!-- HERO HEADING -->
+    <header class="hero" aria-label="Page title">
+      <h1 class="hero__title">What's the sky doing?</h1>
+      <p class="hero__sub">Enter any city to get a live forecast.</p>
+    </header>
+
+    <!-- SEARCH BAR -->
+    <section class="search-section" aria-label="City search">
+      <div class="search-bar glass">
+        <svg class="search-bar__icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+          <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <input
+          class="search-bar__input"
+          id="cityInput"
+          type="text"
+          placeholder="Search city…"
+          autocomplete="off"
+          aria-label="City name"
+          spellcheck="false"
+        />
+        <button class="search-bar__btn" id="searchBtn" aria-label="Search">
+          Search
+        </button>
+      </div>
+      <!-- Error message -->
+      <p class="search-error" id="searchError" role="alert" aria-live="polite" hidden></p>
+    </section>
+
+    <!-- LOADING SPINNER -->
+    <div class="loading" id="loading" hidden aria-label="Loading weather data" role="status">
+      <div class="spinner" aria-hidden="true"></div>
+      <span>Fetching forecast…</span>
+    </div>
+
+    <!-- ── WEATHER RESULTS (hidden until data loads) ── -->
+    <div class="results" id="results" hidden>
+
+      <!-- CURRENT WEATHER CARD -->
+      <section class="card card--current glass" id="currentCard" aria-label="Current weather">
+        <div class="current__top">
+          <div class="current__location">
+            <svg class="current__pin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z"
+                fill="currentColor" opacity=".2" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="9" r="2.5" fill="currentColor"/>
+            </svg>
+            <span id="cityName">—</span>,&nbsp;<span id="countryCode">—</span>
+          </div>
+          <time class="current__date" id="currentDate">—</time>
+        </div>
+
+        <div class="current__body">
+          <!-- Big temperature + icon -->
+          <div class="current__temp-block">
+            <div class="current__icon-wrap" aria-hidden="true">
+              <span class="weather-emoji" id="currentEmoji">⛅</span>
+            </div>
+            <div>
+              <div class="current__temp" id="currentTemp">—</div>
+              <div class="current__desc" id="currentDesc">—</div>
+            </div>
+          </div>
+
+          <!-- Stats row -->
+          <div class="current__stats">
+            <div class="stat">
+              <svg class="stat__icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M12 2a7 7 0 0 1 7 7c0 4.5-7 13-7 13S5 13.5 5 9a7 7 0 0 1 7-7Z" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M12 9v6M9 12h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <span class="stat__label">Feels like</span>
+              <span class="stat__value" id="feelsLike">—</span>
+            </div>
+            <div class="stat">
+              <svg class="stat__icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M12 2v10M12 22v-4M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M12 14c-4 0-7 1.79-7 4s3 4 7 4 7-1.79 7-4-3-4-7-4Z" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+              <span class="stat__label">Humidity</span>
+              <span class="stat__value" id="humidity">—</span>
+            </div>
+            <div class="stat">
+              <svg class="stat__icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"
+                  stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="stat__label">Wind</span>
+              <span class="stat__value" id="windSpeed">—</span>
+            </div>
+            <div class="stat">
+              <svg class="stat__icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M12 7v5l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <span class="stat__label">Pressure</span>
+              <span class="stat__value" id="pressure">—</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5-DAY FORECAST -->
+      <section class="forecast-section" aria-label="5-day forecast">
+        <h2 class="section-title">5-Day Forecast</h2>
+        <div class="forecast-grid" id="forecastGrid" role="list">
+          <!-- Forecast cards injected by JS -->
+        </div>
+      </section>
+
+    </div><!-- /results -->
+
+    <!-- EMPTY STATE (shown before first search) -->
+    <div class="empty-state" id="emptyState" aria-hidden="false">
+      <div class="empty-state__art" aria-hidden="true">
+        <svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Sun rays -->
+          <circle cx="100" cy="40" r="22" fill="url(#sunGrad)" opacity=".9"/>
+          <g stroke="url(#sunGrad)" stroke-width="3" stroke-linecap="round" opacity=".6">
+            <line x1="100" y1="8" x2="100" y2="2"/>
+            <line x1="122" y1="18" x2="126" y2="14"/>
+            <line x1="132" y1="40" x2="138" y2="40"/>
+            <line x1="122" y1="62" x2="126" y2="66"/>
+            <line x1="78" y1="18" x2="74" y2="14"/>
+            <line x1="68" y1="40" x2="62" y2="40"/>
+          </g>
+          <!-- Cloud -->
+          <ellipse cx="90" cy="82" rx="42" ry="18" fill="url(#cloudGrad)" opacity=".85"/>
+          <ellipse cx="108" cy="75" rx="28" ry="20" fill="url(#cloudGrad)" opacity=".85"/>
+          <ellipse cx="76" cy="78" rx="20" ry="15" fill="url(#cloudGrad)" opacity=".85"/>
+          <!-- Rain drops -->
+          <g fill="url(#rainGrad)" opacity=".5">
+            <ellipse cx="82" cy="106" rx="3" ry="5"/>
+            <ellipse cx="98" cy="112" rx="3" ry="5"/>
+            <ellipse cx="114" cy="106" rx="3" ry="5"/>
+          </g>
+          <defs>
+            <linearGradient id="sunGrad" x1="78" y1="18" x2="122" y2="62" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#FBBF24"/>
+              <stop offset="1" stop-color="#F59E0B"/>
+            </linearGradient>
+            <linearGradient id="cloudGrad" x1="60" y1="60" x2="140" y2="100" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#e2e8f0"/>
+              <stop offset="1" stop-color="#cbd5e1"/>
+            </linearGradient>
+            <linearGradient id="rainGrad" x1="82" y1="100" x2="114" y2="118" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#60a5fa"/>
+              <stop offset="1" stop-color="#3b82f6"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <p class="empty-state__text">Type a city above to see the weather.</p>
+    </div>
+
+  </main>
+
+  <!-- ─────────────────────────────────────────
+       FOOTER
+  ───────────────────────────────────────── -->
+  <footer class="footer" role="contentinfo">
+    Powered by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a> — free, no API key needed
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
