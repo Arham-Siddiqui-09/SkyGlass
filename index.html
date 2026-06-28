@@ -169,6 +169,58 @@
         </div>
       </section>
 
+      <!-- AQI & HEALTH TIPS -->
+      <section class="card aqi-card glass" id="aqiCard" aria-label="Air quality and health tips">
+
+        <!-- ── AQI Header ── -->
+        <div class="aqi-card__header">
+          <div class="aqi-card__title-group">
+            <svg class="aqi-card__icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2Z" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M8 12c0-2.21 1.79-4 4-4s4 1.79 4 4-1.79 4-4 4-4-1.79-4-4Z" fill="currentColor" opacity=".25" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M12 8v1M12 15v1M8 12H7M17 12h-1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <h2 class="aqi-card__title">Air Quality</h2>
+          </div>
+          <!-- AQI badge -->
+          <div class="aqi-badge" id="aqiBadge" aria-live="polite">
+            <span class="aqi-badge__index" id="aqiIndex">—</span>
+            <span class="aqi-badge__label" id="aqiLabel">Loading…</span>
+          </div>
+        </div>
+
+        <!-- ── AQI Gauge bar ── -->
+        <div class="aqi-gauge" role="img" id="aqiGaugeWrap" aria-label="AQI gauge">
+          <div class="aqi-gauge__track">
+            <div class="aqi-gauge__fill" id="aqiGaugeFill"></div>
+            <div class="aqi-gauge__needle" id="aqiGaugeNeedle" aria-hidden="true"></div>
+          </div>
+          <div class="aqi-gauge__labels" aria-hidden="true">
+            <span>Good</span><span>Fair</span><span>Moderate</span><span>Poor</span><span>Very Poor</span>
+          </div>
+        </div>
+
+        <!-- ── Pollutant pills ── -->
+        <div class="aqi-pollutants" id="aqiPollutants" aria-label="Pollutant readings">
+          <!-- Injected by JS: PM2.5 · PM10 · NO₂ · O₃ -->
+        </div>
+
+        <!-- ── Health tips ── -->
+        <div class="health-tips" id="healthTips" aria-label="Health recommendations">
+          <div class="health-tips__header">
+            <svg class="health-tips__icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10Z" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span class="health-tips__title">Health Recommendations</span>
+          </div>
+          <ul class="health-tips__list" id="healthTipsList">
+            <!-- Injected by JS -->
+          </ul>
+        </div>
+
+      </section>
+
       <!-- 5-DAY FORECAST -->
       <section class="forecast-section" aria-label="5-day forecast">
         <h2 class="section-title">5-Day Forecast</h2>

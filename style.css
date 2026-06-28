@@ -1220,3 +1220,363 @@ body[data-weather="thunder"] .bg-orb--2 { background: rgba(109, 40, 217, 0.22); 
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
+
+
+/* ═══════════════════════════════════════════════════════════════
+   AQI CARD & HEALTH TIPS — styles
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── AQI card base ──────────────────────────────────────────────── */
+.aqi-card {
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease 0.15s, transform 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.15s;
+}
+
+.aqi-card--loaded {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── AQI header row ─────────────────────────────────────────────── */
+.aqi-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.aqi-card__title-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.aqi-card__icon {
+  width: 22px;
+  height: 22px;
+  color: var(--text-accent);
+  flex-shrink: 0;
+}
+
+.aqi-card__title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+
+/* ── AQI badge (index + label) ──────────────────────────────────── */
+.aqi-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--aqi-bg, var(--stat-bg));
+  border: 1px solid var(--aqi-color, var(--glass-border));
+  transition: background 0.5s ease, border-color 0.5s ease;
+}
+
+.aqi-badge__index {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--aqi-color, var(--text-primary));
+  line-height: 1;
+  transition: color 0.5s ease;
+}
+
+.aqi-badge__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--aqi-color, var(--text-secondary));
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: color 0.5s ease;
+}
+
+
+/* ── AQI gauge bar ──────────────────────────────────────────────── */
+.aqi-gauge {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.aqi-gauge__track {
+  position: relative;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  /* Rainbow gradient across the full range */
+  background: linear-gradient(
+    to right,
+    #22c55e 0%,      /* Good */
+    #a3e635 25%,     /* Fair */
+    #facc15 50%,     /* Moderate */
+    #f97316 75%,     /* Poor */
+    #ef4444 100%     /* Very Poor */
+  );
+  overflow: visible;
+}
+
+.aqi-gauge__fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  /* Overlay to darken the unfilled portion */
+  box-shadow: inset 0 0 0 10px var(--color-bg-to, #0d1530);
+  background: transparent;
+  /* We dim the track to the right of the needle instead */
+  transition: width 1s cubic-bezier(0.34, 1.1, 0.64, 1);
+  pointer-events: none;
+}
+
+/* Re-approach: use a pseudo-overlay darkening the RIGHT portion */
+.aqi-gauge__track::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  /* width set dynamically via JS through a CSS var */
+  width: calc(100% - var(--gauge-pct, 0%));
+  height: 100%;
+  border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+  background: var(--glass-bg);
+  backdrop-filter: blur(2px);
+  transition: width 1s cubic-bezier(0.34, 1.1, 0.64, 1);
+}
+
+.aqi-gauge__needle {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  border: 3px solid var(--aqi-color, #818cf8);
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.3), 0 0 12px var(--aqi-color, rgba(129,140,248,0.6));
+  transition: left 1s cubic-bezier(0.34, 1.1, 0.64, 1),
+              border-color 0.5s ease,
+              box-shadow 0.5s ease;
+  z-index: 2;
+}
+
+.aqi-gauge__labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+  padding: 0 var(--space-1);
+}
+
+
+/* ── Pollutant pills row ────────────────────────────────────────── */
+.aqi-pollutants {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.pollutant-pill {
+  flex: 1 1 auto;
+  min-width: 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-3) var(--space-3);
+  background: var(--stat-bg);
+  border: 1px solid var(--stat-border);
+  border-radius: var(--radius-md);
+  text-align: center;
+  position: relative;
+  transition: transform var(--transition-fast), background var(--transition-fast),
+              border-color var(--transition-fast);
+  animation: statPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+
+.pollutant-pill:nth-child(1) { animation-delay: 0.10s; }
+.pollutant-pill:nth-child(2) { animation-delay: 0.18s; }
+.pollutant-pill:nth-child(3) { animation-delay: 0.26s; }
+.pollutant-pill:nth-child(4) { animation-delay: 0.34s; }
+
+.pollutant-pill:hover {
+  transform: translateY(-3px);
+  background: var(--forecast-hover);
+}
+
+.pollutant-pill--warn {
+  border-color: rgba(249,115,22,0.40);
+  background: rgba(249,115,22,0.06);
+}
+
+.pollutant-pill__label {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.pollutant-pill__value {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.pollutant-pill__unit {
+  font-size: 0.6rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+/* Elevated-level dot indicator */
+.pollutant-pill__dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f97316;
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%       { transform: scale(1.5); opacity: 0.6; }
+}
+
+.aqi-unavailable {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+
+/* ── Health tips panel ──────────────────────────────────────────── */
+.health-tips {
+  background: var(--stat-bg);
+  border: 1px solid var(--stat-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.health-tips__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.health-tips__icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-accent);
+  flex-shrink: 0;
+}
+
+.health-tips__title {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.health-tips__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.health-tip {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  line-height: 1.55;
+  padding-left: var(--space-2);
+  border-left: 2px solid var(--aqi-color, var(--text-accent));
+  opacity: 0;
+  transform: translateX(-8px);
+  animation: tipSlideIn 0.4s ease both;
+  transition: border-color 0.5s ease;
+}
+
+.health-tip:nth-child(1) { animation-delay: 0.40s; }
+.health-tip:nth-child(2) { animation-delay: 0.50s; }
+.health-tip:nth-child(3) { animation-delay: 0.60s; }
+.health-tip:nth-child(4) { animation-delay: 0.70s; }
+
+@keyframes tipSlideIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+
+/* ── Gauge overlay fix — use JS-driven CSS var approach ─────────── */
+/* JS sets style="--gauge-pct: X%" on the track wrapper */
+.aqi-gauge__track {
+  --gauge-pct: 0%;
+}
+
+
+/* ── Responsive tweaks ──────────────────────────────────────────── */
+@media (max-width: 700px) {
+  .aqi-card {
+    padding: var(--space-6);
+  }
+
+  .aqi-pollutants {
+    gap: var(--space-2);
+  }
+
+  .pollutant-pill {
+    min-width: 72px;
+    padding: var(--space-2);
+  }
+
+  .pollutant-pill__value {
+    font-size: 0.95rem;
+  }
+
+  .health-tips {
+    padding: var(--space-4);
+  }
+
+  .aqi-gauge__labels {
+    font-size: 0.58rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .aqi-badge {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .aqi-badge__index {
+    font-size: 1.05rem;
+  }
+
+  .pollutant-pill {
+    min-width: 64px;
+  }
+}
