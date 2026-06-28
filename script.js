@@ -159,6 +159,15 @@ function hideLoading() {
 function showResults() {
   DOM.results.hidden    = false;
   DOM.emptyState.hidden = true;
+
+  // Re-trigger entrance animations on the temp number
+  const tempEl = DOM.currentTemp;
+  tempEl.classList.remove('re-animate', 'go');
+  void tempEl.offsetWidth; // reflow
+  tempEl.classList.add('re-animate');
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => tempEl.classList.add('go'));
+  });
 }
 
 function showError(message) {
@@ -334,6 +343,44 @@ function renderCurrentWeather(current, location) {
   DOM.humidity.textContent  = `${current.relative_humidity_2m}%`;
   DOM.windSpeed.textContent = `${Math.round(current.wind_speed_10m)} ${CONFIG.SPEED_UNIT}`;
   DOM.pressure.textContent  = `${Math.round(current.surface_pressure)} hPa`;
+
+  // ── Dynamic condition styling ──────────────────────────────────
+  const scene = resolveConditionName(current.weather_code, current.is_day === 1);
+
+  // Set data-condition on the card for CSS accent border / emoji tweaks
+  const card = document.getElementById('currentCard');
+  if (card) card.setAttribute('data-condition', scene);
+
+  // Set data-weather on body for orb color shift
+  document.body.setAttribute('data-weather', scene);
+
+  // Activate canvas particle scene
+  const cnv = document.getElementById('weatherCanvas');
+  if (cnv) {
+    // Small delay so the card is visible before the canvas fades in
+    setTimeout(() => cnv.classList.add('is-active'), 200);
+  }
+  if (window.WeatherCanvas) {
+    window.WeatherCanvas.start(current.weather_code, current.is_day === 1);
+  }
+}
+
+/**
+ * Maps a WMO code + isDay flag to a short condition name
+ * matching the data-condition / data-weather CSS hooks.
+ * @param {number}  code
+ * @param {boolean} isDay
+ * @returns {string}
+ */
+function resolveConditionName(code, isDay) {
+  if ([95, 96, 99].includes(code))                    return 'thunder';
+  if ([71, 73, 75, 77, 85, 86].includes(code))        return 'snow';
+  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return 'rain';
+  if ([51, 53, 55, 56, 57].includes(code))            return 'drizzle';
+  if ([45, 48].includes(code))                        return 'fog';
+  if ([2, 3].includes(code))                          return 'cloudy';
+  if ([0, 1].includes(code))                          return isDay ? 'sunny' : 'night';
+  return isDay ? 'sunny' : 'night';
 }
 
 /**
@@ -401,6 +448,13 @@ async function handleSearch() {
   }
 
   showLoading();
+
+  // Reset canvas & condition state for clean re-render
+  const prevCanvas = document.getElementById('weatherCanvas');
+  if (prevCanvas) prevCanvas.classList.remove('is-active');
+  document.getElementById('currentCard')?.removeAttribute('data-condition');
+  document.body.removeAttribute('data-weather');
+  if (window.WeatherCanvas) window.WeatherCanvas.stop();
 
   try {
     // Step 1: Geocode

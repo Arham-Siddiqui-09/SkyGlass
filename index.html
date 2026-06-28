@@ -105,6 +105,8 @@
 
       <!-- CURRENT WEATHER CARD -->
       <section class="card card--current glass" id="currentCard" aria-label="Current weather">
+        <!-- Dynamic weather scene canvas (sits behind card content) -->
+        <canvas class="weather-canvas" id="weatherCanvas" aria-hidden="true"></canvas>
         <div class="current__top">
           <div class="current__location">
             <svg class="current__pin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -229,6 +231,7 @@
     Powered by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a> — free, no API key needed
   </footer>
 
+  <script src="weather-canvas.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

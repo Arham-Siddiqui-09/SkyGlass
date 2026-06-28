@@ -722,6 +722,141 @@ body {
 }
 
 
+/* ── 15b. WEATHER CANVAS ───────────────────────────────────────── */
+.card--current {
+  position: relative;
+  overflow: hidden;
+}
+
+.weather-canvas {
+  position: absolute;
+  inset: 0;
+  width:  100%;
+  height: 100%;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.weather-canvas.is-active {
+  opacity: 0.55;
+}
+
+.card--current > *:not(.weather-canvas) {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* ── 15c. STAT NUMBER COUNTER ANIMATION ────────────────────────── */
+.stat__value {
+  min-width: 3ch;
+  display: inline-block;
+  text-align: center;
+  transition: color var(--transition-base);
+}
+
+.stat__value.counting {
+  color: var(--text-accent);
+}
+
+
+/* ── 15d. CARD ENTRANCE — staggered stat tiles ─────────────────── */
+.stat {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.4s ease, transform 0.4s ease,
+              background var(--transition-fast);
+}
+
+.stat.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.current__stats .stat:nth-child(1) { transition-delay: 0.05s; }
+.current__stats .stat:nth-child(2) { transition-delay: 0.12s; }
+.current__stats .stat:nth-child(3) { transition-delay: 0.19s; }
+.current__stats .stat:nth-child(4) { transition-delay: 0.26s; }
+
+
+/* ── 15e. TEMPERATURE FLIP-IN ──────────────────────────────────── */
+@keyframes tempFlip {
+  0%   { opacity: 0; transform: perspective(400px) rotateX(-70deg) translateY(-10px); }
+  60%  { opacity: 1; transform: perspective(400px) rotateX(10deg); }
+  100% { opacity: 1; transform: perspective(400px) rotateX(0); }
+}
+
+.current__temp.animate-in {
+  animation: tempFlip 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+
+/* ── 15f. DESCRIPTION + LOCATION SLIDE / FADE ──────────────────── */
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.current__desc.animate-in {
+  animation: slideInLeft 0.4s ease 0.15s both;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.current__location.animate-in { animation: fadeInDown 0.35s ease both; }
+.current__date.animate-in     { animation: fadeInDown 0.35s ease 0.1s both; }
+
+
+/* ── 15g. PAGE GRADIENT SHIFT PER WEATHER TYPE ─────────────────── */
+body[data-weather="rain"]    { --color-bg-from: #1a3352; --color-bg-to: #1e3d5c; }
+body[data-weather="thunder"] { --color-bg-from: #111122; --color-bg-to: #1a1a2e; }
+body[data-weather="snow"]    { --color-bg-from: #1e3560; --color-bg-to: #2a4a7a; }
+body[data-weather="fog"]     { --color-bg-from: #4a5568; --color-bg-to: #606878; }
+body[data-weather="clear"]   { --color-bg-from: #0a1628; --color-bg-to: #0e2040; }
+body[data-weather="cloudy"]  { --color-bg-from: #283040; --color-bg-to: #384555; }
+body[data-weather="night"]   { --color-bg-from: #050d1a; --color-bg-to: #0a1428; }
+
+[data-theme="light"] body[data-weather="rain"]    { --color-bg-from: #bfdbfe; --color-bg-to: #c7d8f0; }
+[data-theme="light"] body[data-weather="thunder"] { --color-bg-from: #c4c4d8; --color-bg-to: #d0d0e0; }
+[data-theme="light"] body[data-weather="snow"]    { --color-bg-from: #dbeafe; --color-bg-to: #e0eeff; }
+
+
+/* ── 15h. WIND ICON ANIMATION ───────────────────────────────────── */
+.stat--wind .stat__icon {
+  transition: transform 0.3s ease;
+}
+
+.stat--wind.is-windy .stat__icon {
+  animation: windSpin 1.4s linear infinite;
+}
+
+.stat--wind.is-very-windy .stat__icon {
+  animation: windSpin 0.6s linear infinite;
+}
+
+@keyframes windSpin {
+  to { transform: rotate(360deg); }
+}
+
+
+/* ── 15i. EMOJI SWAP ANIMATION ──────────────────────────────────── */
+@keyframes emojiPop {
+  0%   { transform: scale(0.5) rotate(-15deg); opacity: 0; }
+  70%  { transform: scale(1.15) rotate(5deg);  opacity: 1; }
+  100% { transform: scale(1)    rotate(0deg);  opacity: 1; }
+}
+
+.weather-emoji.pop-in {
+  animation: emojiPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+
 /* ── 16. RESPONSIVE — TABLET ───────────────────────────────────── */
 @media (max-width: 700px) {
   .nav {
@@ -773,3 +908,315 @@ body {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   DYNAMIC ANIMATIONS — added block
+   Canvas scene, condition accents, stat pop-ins, emoji shimmer,
+   forecast hover glow, loading weather scene, number count-up
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Canvas overlay inside current card ────────────────────────── */
+.card--current {
+  position: relative;   /* needed for canvas abs positioning */
+  overflow: hidden;
+}
+
+.weather-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: var(--radius-xl);
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+/* Fade canvas in once scene is active (JS adds this class) */
+.weather-canvas.is-active {
+  opacity: 1;
+}
+
+/* All content inside the card must sit above the canvas */
+.card--current > *:not(.weather-canvas) {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* ── Condition-based card accent border ─────────────────────────── */
+/* JS sets data-condition on .card--current */
+.card--current[data-condition="sunny"] {
+  --card-accent: rgba(251, 191, 36, 0.35);
+  border-color: rgba(251, 191, 36, 0.30);
+  box-shadow: var(--glass-shadow), 0 0 40px rgba(251, 191, 36, 0.12);
+}
+.card--current[data-condition="night"] {
+  --card-accent: rgba(99, 102, 241, 0.40);
+  border-color: rgba(129, 140, 248, 0.30);
+  box-shadow: var(--glass-shadow), 0 0 40px rgba(99, 102, 241, 0.15);
+}
+.card--current[data-condition="rain"],
+.card--current[data-condition="drizzle"] {
+  --card-accent: rgba(96, 165, 250, 0.35);
+  border-color: rgba(96, 165, 250, 0.25);
+  box-shadow: var(--glass-shadow), 0 0 40px rgba(96, 165, 250, 0.12);
+}
+.card--current[data-condition="snow"] {
+  --card-accent: rgba(186, 230, 253, 0.40);
+  border-color: rgba(186, 230, 253, 0.28);
+  box-shadow: var(--glass-shadow), 0 0 50px rgba(186, 230, 253, 0.15);
+}
+.card--current[data-condition="thunder"] {
+  --card-accent: rgba(167, 139, 250, 0.45);
+  border-color: rgba(167, 139, 250, 0.30);
+  box-shadow: var(--glass-shadow), 0 0 50px rgba(167, 139, 250, 0.20);
+}
+.card--current[data-condition="fog"],
+.card--current[data-condition="cloudy"] {
+  --card-accent: rgba(148, 163, 184, 0.30);
+  border-color: rgba(148, 163, 184, 0.22);
+  box-shadow: var(--glass-shadow), 0 0 30px rgba(148, 163, 184, 0.10);
+}
+
+
+/* ── Enhanced weather emoji animation ───────────────────────────── */
+.weather-emoji {
+  animation: iconBob 3s ease-in-out infinite alternate,
+             iconShimmer 6s ease-in-out infinite;
+  will-change: transform, filter;
+}
+
+@keyframes iconBob {
+  from { transform: translateY(0) rotate(-2deg); }
+  to   { transform: translateY(-10px) rotate(2deg); }
+}
+
+@keyframes iconShimmer {
+  0%, 100% { filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2)); }
+  50%       { filter: drop-shadow(0 8px 24px rgba(129,140,248,0.35)) brightness(1.08); }
+}
+
+/* Condition-specific emoji tweaks */
+.card--current[data-condition="sunny"]  .weather-emoji { animation-name: iconBob, sunPulse; }
+.card--current[data-condition="rain"]   .weather-emoji { animation-name: iconBob, rainShake; }
+.card--current[data-condition="snow"]   .weather-emoji { animation-name: snowSpin, iconShimmer; }
+.card--current[data-condition="thunder"] .weather-emoji { animation-name: iconBob, thunderPulse; }
+.card--current[data-condition="night"]  .weather-emoji { animation-name: moonFloat, moonGlow; }
+
+@keyframes sunPulse {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(251,191,36,0.5)) brightness(1.0); }
+  50%       { filter: drop-shadow(0 0 22px rgba(251,191,36,0.8)) brightness(1.15); }
+}
+
+@keyframes rainShake {
+  0%, 100%  { filter: drop-shadow(0 4px 8px rgba(96,165,250,0.3)); }
+  25%        { transform: translateX(-2px) translateY(-4px); }
+  75%        { transform: translateX(2px) translateY(-6px); }
+}
+
+@keyframes snowSpin {
+  from { transform: rotate(0deg) scale(1.0); }
+  to   { transform: rotate(15deg) scale(1.05); }
+}
+
+@keyframes thunderPulse {
+  0%, 90%, 100% { filter: drop-shadow(0 4px 8px rgba(167,139,250,0.4)); }
+  92%            { filter: drop-shadow(0 0 30px rgba(255,255,200,0.9)) brightness(1.4); }
+  94%            { filter: drop-shadow(0 4px 8px rgba(167,139,250,0.4)); }
+  96%            { filter: drop-shadow(0 0 25px rgba(255,255,200,0.7)) brightness(1.3); }
+}
+
+@keyframes moonFloat {
+  0%   { transform: translateY(0)    rotate(-4deg); }
+  50%  { transform: translateY(-9px) rotate(0deg); }
+  100% { transform: translateY(-2px) rotate(4deg); }
+}
+
+@keyframes moonGlow {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(129,140,248,0.4)); }
+  50%       { filter: drop-shadow(0 0 20px rgba(129,140,248,0.75)) brightness(1.1); }
+}
+
+
+/* ── Temperature number entrance ───────────────────────────────── */
+.current__temp {
+  animation: tempReveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes tempReveal {
+  from { opacity: 0; transform: scale(0.6) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Re-trigger on new search via class swap done by JS */
+.current__temp.re-animate {
+  animation: none;
+}
+.current__temp.re-animate.go {
+  animation: tempReveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+
+/* ── Stat cards staggered pop-in ────────────────────────────────── */
+.stat {
+  animation: statPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.current__stats .stat:nth-child(1) { animation-delay: 0.10s; }
+.current__stats .stat:nth-child(2) { animation-delay: 0.18s; }
+.current__stats .stat:nth-child(3) { animation-delay: 0.26s; }
+.current__stats .stat:nth-child(4) { animation-delay: 0.34s; }
+
+@keyframes statPop {
+  from { opacity: 0; transform: translateY(16px) scale(0.90); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* Stat icon continuous gentle spin on hover */
+.stat:hover .stat__icon {
+  animation: iconSpin 0.6s ease-in-out;
+}
+
+@keyframes iconSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+
+/* ── Current card content entrance ─────────────────────────────── */
+.current__top {
+  animation: fadeSlideDown 0.4s ease both;
+}
+
+.current__temp-block {
+  animation: fadeSlideRight 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+}
+
+@keyframes fadeSlideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeSlideRight {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+
+/* ── Forecast cards — richer entrance & hover ───────────────────── */
+.forecast-card {
+  /* Override baseline animation with a springier one */
+  animation: forecastPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes forecastPop {
+  from { opacity: 0; transform: translateY(28px) scale(0.88); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Stagger delays (override existing ones with same specificity) */
+.forecast-card:nth-child(1) { animation-delay: 0.08s; }
+.forecast-card:nth-child(2) { animation-delay: 0.16s; }
+.forecast-card:nth-child(3) { animation-delay: 0.24s; }
+.forecast-card:nth-child(4) { animation-delay: 0.32s; }
+.forecast-card:nth-child(5) { animation-delay: 0.40s; }
+
+/* Emoji grows on forecast card hover */
+.forecast-card:hover .forecast-card__emoji {
+  display: inline-block;
+  animation: emojiPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes emojiPop {
+  from { transform: scale(1); }
+  to   { transform: scale(1.35) rotate(-5deg); }
+}
+
+
+/* ── Section title reveal ───────────────────────────────────────── */
+.section-title {
+  animation: fadeSlideDown 0.4s ease 0.05s both;
+}
+
+
+/* ── Enhanced loading animation ─────────────────────────────────── */
+.spinner {
+  /* Replace plain spin with a comet-tail effect */
+  border: 3px solid transparent;
+  border-top-color: var(--text-accent);
+  border-right-color: color-mix(in srgb, var(--text-accent) 40%, transparent);
+  animation: spin 0.75s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+}
+
+.loading span {
+  animation: loadingPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes loadingPulse {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 1.0; }
+}
+
+
+/* ── Background orbs — condition tint ──────────────────────────── */
+/* When a condition class is set on body, shift the orbs */
+body[data-weather="sunny"]   .bg-orb--1 { background: rgba(251, 191, 36, 0.20); }
+body[data-weather="rain"]    .bg-orb--1 { background: rgba(96, 165, 250, 0.22); }
+body[data-weather="snow"]    .bg-orb--1 { background: rgba(186, 230, 253, 0.22); }
+body[data-weather="thunder"] .bg-orb--1 { background: rgba(139, 92, 246, 0.30); }
+body[data-weather="night"]   .bg-orb--1 { background: rgba(55, 48, 163, 0.35); }
+
+body[data-weather="sunny"]   .bg-orb--2 { background: rgba(245, 158, 11, 0.18); }
+body[data-weather="rain"]    .bg-orb--2 { background: rgba(59, 130, 246, 0.20); }
+body[data-weather="snow"]    .bg-orb--2 { background: rgba(147, 197, 253, 0.18); }
+body[data-weather="thunder"] .bg-orb--2 { background: rgba(109, 40, 217, 0.22); }
+
+.bg-orb {
+  transition: background 2s ease;
+}
+
+
+/* ── Nav logo pulse on load ────────────────────────────────────── */
+.nav__logo-icon {
+  animation: logoPulse 4s ease-in-out infinite;
+}
+
+@keyframes logoPulse {
+  0%, 100% { opacity: 1;    transform: scale(1); }
+  50%       { opacity: 0.75; transform: scale(1.08) rotate(5deg); }
+}
+
+
+/* ── Search bar focus ring animation ────────────────────────────── */
+.search-bar {
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+}
+
+.search-bar:focus-within {
+  transform: translateY(-2px);
+}
+
+
+/* ── Empty-state art breathing animation ─────────────────────────  */
+.empty-state__art svg {
+  animation: breathe 4s ease-in-out infinite alternate;
+}
+
+@keyframes breathe {
+  from { transform: scale(1)    translateY(0); }
+  to   { transform: scale(1.06) translateY(-8px); }
+}
+
+
+/* ── Results: smooth re-render (JS adds .refreshing then removes) ── */
+.results.refreshing {
+  animation: none;
+  opacity: 0.4;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
