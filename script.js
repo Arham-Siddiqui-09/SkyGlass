@@ -28,9 +28,6 @@ const CONFIG = {
   // Open-Meteo Weather API – coordinates → weather data
   WEATHER_URL: 'https://api.open-meteo.com/v1/forecast',
 
-  // Open-Meteo Air Quality API – free, no key required
-  AQI_URL: 'https://air-quality-api.open-meteo.com/v1/air-quality',
-
   // Display units
   TEMP_UNIT:  '°C',
   SPEED_UNIT: 'km/h',
@@ -61,16 +58,6 @@ const DOM = {
 
   // 5-day forecast container
   forecastGrid: document.getElementById('forecastGrid'),
-
-  // AQI card elements
-  aqiCard:       document.getElementById('aqiCard'),
-  aqiBadge:      document.getElementById('aqiBadge'),
-  aqiIndex:      document.getElementById('aqiIndex'),
-  aqiLabel:      document.getElementById('aqiLabel'),
-  aqiGaugeFill:  document.getElementById('aqiGaugeFill'),
-  aqiGaugeNeedle:document.getElementById('aqiGaugeNeedle'),
-  aqiPollutants: document.getElementById('aqiPollutants'),
-  healthTipsList:document.getElementById('healthTipsList'),
 };
 
 
@@ -328,218 +315,6 @@ async function fetchWeather({ lat, lng, timezone }) {
 }
 
 
-/* ── AQI DATA TABLES ────────────────────────────────────────────── */
-
-/**
- * Open-Meteo uses the European AQI scale (1–5).
- * We map it to WHO/EU-style labels, colors, and health guidance.
- *
- * Index: 1=Good · 2=Fair · 3=Moderate · 4=Poor · 5=Very Poor
- */
-const AQI_LEVELS = [
-  null, // placeholder so index aligns with 1-based values
-  {
-    label:  'Good',
-    color:  '#22c55e',   // green
-    bg:     'rgba(34,197,94,0.15)',
-    pct:    10,          // gauge fill %
-    tips: [
-      '✅ Air quality is excellent — enjoy outdoor activities freely.',
-      '🏃 Great day for a run, cycling, or any outdoor sport.',
-      '🪟 Open your windows to ventilate your home naturally.',
-      '🌱 Perfect conditions for gardening or outdoor work.',
-    ],
-  },
-  {
-    label:  'Fair',
-    color:  '#a3e635',   // lime
-    bg:     'rgba(163,230,53,0.15)',
-    pct:    30,
-    tips: [
-      '🟡 Air quality is acceptable for most people.',
-      '👶 Unusually sensitive individuals may want to limit prolonged outdoor exertion.',
-      '🪟 Ventilation is generally fine — windows can stay open.',
-      '🤧 If you have allergies, monitor your symptoms outdoors.',
-    ],
-  },
-  {
-    label:  'Moderate',
-    color:  '#facc15',   // yellow
-    bg:     'rgba(250,204,21,0.15)',
-    pct:    55,
-    tips: [
-      '⚠️ Sensitive groups (children, elderly, asthma sufferers) should reduce prolonged outdoor exertion.',
-      '😷 Consider wearing an N95 mask if you're in a high-risk group.',
-      '🏠 Keep windows partially closed during peak traffic hours.',
-      '💧 Stay well-hydrated — it helps your respiratory system.',
-      '🐾 Limit your pets' time outdoors if they have respiratory issues.',
-    ],
-  },
-  {
-    label:  'Poor',
-    color:  '#f97316',   // orange
-    bg:     'rgba(249,115,22,0.15)',
-    pct:    75,
-    tips: [
-      '🚫 Avoid strenuous outdoor activities, especially for sensitive groups.',
-      '😷 Everyone should consider wearing an N95 or KN95 mask outdoors.',
-      '🏠 Keep windows and doors closed; use air purifiers if available.',
-      '🌬️ Avoid using candles, fireplaces, or anything that adds indoor smoke.',
-      '💊 If you have asthma or heart disease, keep medication accessible.',
-      '🧴 Rinse your face and hands after being outdoors.',
-    ],
-  },
-  {
-    label:  'Very Poor',
-    color:  '#ef4444',   // red
-    bg:     'rgba(239,68,68,0.15)',
-    pct:    95,
-    tips: [
-      '🚨 Health alert — everyone may experience serious health effects.',
-      '🏠 Stay indoors as much as possible; seal gaps with damp towels if necessary.',
-      '😷 Wear an N95 mask if you must go outside — a surgical mask is not enough.',
-      '🚗 Keep car windows closed and use recirculated air mode.',
-      '🏥 People with heart or lung conditions should contact a healthcare provider.',
-      '📵 Avoid exercising outdoors entirely until conditions improve.',
-    ],
-  },
-];
-
-/**
- * Fetches current air quality data from Open-Meteo's Air Quality API.
- * Returns hourly current_hour data for PM2.5, PM10, NO2, ozone, and European AQI.
- *
- * @param {{ lat: number, lng: number }} location
- * @returns {Promise<Object|null>}  null if the fetch fails (AQI is non-critical)
- */
-async function fetchAirQuality({ lat, lng }) {
-  try {
-    const url = new URL(CONFIG.AQI_URL);
-    url.searchParams.set('latitude',  lat);
-    url.searchParams.set('longitude', lng);
-    // Request hourly variables — we'll pick the current hour's value
-    url.searchParams.set('hourly', [
-      'pm2_5',
-      'pm10',
-      'nitrogen_dioxide',
-      'ozone',
-      'european_aqi',
-    ].join(','));
-    url.searchParams.set('forecast_days', '1');
-    url.searchParams.set('timezone', 'auto');
-
-    const response = await fetch(url);
-    if (!response.ok) return null;
-
-    const data = await response.json();
-
-    // Find the index of the current hour in the hourly time array
-    const now = new Date();
-    const currentHourISO = new Date(
-      now.getFullYear(), now.getMonth(), now.getDate(), now.getHours()
-    ).toISOString().slice(0, 13); // "YYYY-MM-DDTHH"
-
-    const idx = data.hourly.time.findIndex(t => t.startsWith(currentHourISO));
-    const i = idx >= 0 ? idx : 0;
-
-    return {
-      aqi:   data.hourly.european_aqi[i]    ?? null,
-      pm25:  data.hourly.pm2_5[i]           ?? null,
-      pm10:  data.hourly.pm10[i]            ?? null,
-      no2:   data.hourly.nitrogen_dioxide[i] ?? null,
-      ozone: data.hourly.ozone[i]           ?? null,
-    };
-  } catch (_) {
-    return null;   // AQI is supplementary — never block the main UI
-  }
-}
-
-/**
- * Renders the AQI card with gauge, pollutant pills, and health tips.
- * @param {Object|null} aqiData
- */
-function renderAQI(aqiData) {
-  const card = DOM.aqiCard;
-  if (!card) return;
-
-  // If AQI data unavailable, show a graceful fallback
-  if (!aqiData || aqiData.aqi === null) {
-    DOM.aqiIndex.textContent = 'N/A';
-    DOM.aqiLabel.textContent = 'Unavailable';
-    DOM.aqiBadge.style.setProperty('--aqi-color', 'var(--text-secondary)');
-    DOM.aqiBadge.style.setProperty('--aqi-bg', 'var(--stat-bg)');
-    DOM.aqiGaugeFill.style.width = '0%';
-    DOM.aqiGaugeNeedle.style.left = '0%';
-    DOM.aqiPollutants.innerHTML = '<p class="aqi-unavailable">Air quality data not available for this location.</p>';
-    DOM.healthTipsList.innerHTML = '<li class="health-tip">General tip: check local air quality apps for your area.</li>';
-    return;
-  }
-
-  // European AQI is 0–500+ but the API categorises it 1–5 as well.
-  // We use european_aqi integer (0-500+) for display and derive category (1-5).
-  const rawAqi = Math.round(aqiData.aqi);
-  // Derive category 1-5 from raw AQI value
-  let category;
-  if      (rawAqi <= 20)  category = 1;
-  else if (rawAqi <= 40)  category = 2;
-  else if (rawAqi <= 60)  category = 3;
-  else if (rawAqi <= 80)  category = 4;
-  else                    category = 5;
-
-  const level = AQI_LEVELS[category];
-
-  // ── Badge ──
-  DOM.aqiIndex.textContent = rawAqi;
-  DOM.aqiLabel.textContent = level.label;
-  DOM.aqiBadge.style.setProperty('--aqi-color', level.color);
-  DOM.aqiBadge.style.setProperty('--aqi-bg',    level.bg);
-
-  // ── Gauge ──
-  // Drive the ::after overlay via CSS custom property; animate needle position
-  const track = DOM.aqiGaugeFill?.closest('.aqi-gauge__track');
-  if (track) track.style.setProperty('--gauge-pct', '0%');
-  if (DOM.aqiGaugeNeedle) DOM.aqiGaugeNeedle.style.left = '0%';
-  DOM.aqiGaugeNeedle.style.borderColor = level.color;
-  DOM.aqiGaugeNeedle.style.boxShadow = `0 0 0 3px rgba(0,0,0,0.3), 0 0 12px ${level.color}`;
-  setTimeout(() => {
-    if (track) track.style.setProperty('--gauge-pct', `${level.pct}%`);
-    if (DOM.aqiGaugeNeedle) DOM.aqiGaugeNeedle.style.left = `${level.pct}%`;
-  }, 300);
-
-  // ── Pollutant pills ──
-  const pollutants = [
-    { label: 'PM₂.₅', value: aqiData.pm25,  unit: 'μg/m³', warn: aqiData.pm25  > 25 },
-    { label: 'PM₁₀',  value: aqiData.pm10,  unit: 'μg/m³', warn: aqiData.pm10  > 50 },
-    { label: 'NO₂',   value: aqiData.no2,   unit: 'μg/m³', warn: aqiData.no2   > 40 },
-    { label: 'O₃',    value: aqiData.ozone, unit: 'μg/m³', warn: aqiData.ozone > 100 },
-  ];
-
-  DOM.aqiPollutants.innerHTML = pollutants.map(p => `
-    <div class="pollutant-pill ${p.warn ? 'pollutant-pill--warn' : ''}" role="listitem">
-      <span class="pollutant-pill__label">${p.label}</span>
-      <span class="pollutant-pill__value">${p.value !== null ? p.value.toFixed(1) : '—'}</span>
-      <span class="pollutant-pill__unit">${p.unit}</span>
-      ${p.warn ? '<span class="pollutant-pill__dot" aria-label="elevated" title="Above WHO guideline"></span>' : ''}
-    </div>
-  `).join('');
-
-  // ── Health tips ── (pick 3-4 relevant ones for the category)
-  const tips = level.tips.slice(0, category <= 2 ? 3 : 4);
-  DOM.healthTipsList.innerHTML = tips.map(tip =>
-    `<li class="health-tip">${tip}</li>`
-  ).join('');
-
-  // ── Pass AQI color to CSS variables on the card (for health tips border) ──
-  card.style.setProperty('--aqi-color', level.color);
-  card.style.setProperty('--aqi-bg', level.bg);
-
-  // ── Animate the card in ──
-  card.classList.remove('aqi-card--loaded');
-  void card.offsetWidth; // reflow to re-trigger animation
-  card.classList.add('aqi-card--loaded');
-}
-
-
 /* ── UI RENDERERS ───────────────────────────────────────────────── */
 
 /**
@@ -685,18 +460,12 @@ async function handleSearch() {
     // Step 1: Geocode
     const location = await geocodeCity(city);
 
-    // Step 2: Fetch weather + AQI in parallel (AQI is non-blocking)
-    const [weather, aqiData] = await Promise.all([
-      fetchWeather(location),
-      fetchAirQuality(location),
-    ]);
+    // Step 2: Fetch weather (single API call for all data)
+    const weather = await fetchWeather(location);
 
-    // Step 3: Render weather
+    // Step 3: Render
     renderCurrentWeather(weather.current, location);
     renderForecast(weather.daily, location.timezone, weather.current.is_day);
-
-    // Step 4: Render AQI (always renders — shows fallback if data unavailable)
-    renderAQI(aqiData);
 
     hideLoading();
     showResults();
